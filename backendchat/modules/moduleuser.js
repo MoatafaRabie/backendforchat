@@ -1,5 +1,4 @@
 const mongoose= require("mongoose");
-const { default: _default } = require("validator");
 
 const moduleuser = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
@@ -9,4 +8,5 @@ const moduleuser = new mongoose.Schema({
 },{timestamps:true});
 
 module.exports =mongoose.model("moduleuser",moduleuser);
+
 
