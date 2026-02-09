@@ -7,7 +7,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server,{
     cors:{
-        origin:['http://localhost:3000'],
+        origin:['https://frontendchat1-avb3-lime.vercel.app'],
         methods:["GET","POST"],
     credentials: true 
   },
@@ -31,5 +31,6 @@ io.on('connection',(socket)=>{
         io.emit('getOnlineUsers',Object.keys(userSocketmap))
     });
 });
+
 
 module.exports= {app , io , server,getReciverSocketId}
