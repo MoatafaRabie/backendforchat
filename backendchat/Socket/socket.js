@@ -9,7 +9,8 @@ const io = new Server(server,{
     cors:{
         origin:['https://frontendchat1-avb3-lime.vercel.app'],
         methods:["GET","POST"],
-    credentials: true 
+    credentials: true ,
+        allowedHeaders: ["Content-Type", "Authorization"],
   },
 transports: ["polling", "websocket"], 
   allowEIO3: true
@@ -34,3 +35,4 @@ io.on('connection',(socket)=>{
 
 
 module.exports= {app , io , server,getReciverSocketId}
+
