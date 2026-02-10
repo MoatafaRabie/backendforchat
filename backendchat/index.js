@@ -21,6 +21,7 @@ app.use(cors({
     origin: "https://frontendchat1-avb3-lime.vercel.app",
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
+    allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
 app.use(cookieParser());
@@ -50,5 +51,6 @@ const startServer = async () => {
 
 
 startServer();
+
 
 
