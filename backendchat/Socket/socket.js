@@ -7,7 +7,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server,{
     cors:{
-        origin:['https://frontendchat1-avb3-lime.vercel.app'],
+        origin:['https://frontendchat1.vercel.app'],
         methods:["GET","POST"],
     credentials: true ,
         allowedHeaders: ["Content-Type", "Authorization"],
@@ -35,5 +35,6 @@ io.on('connection',(socket)=>{
 
 
 module.exports= {app , io , server,getReciverSocketId}
+
 
 
