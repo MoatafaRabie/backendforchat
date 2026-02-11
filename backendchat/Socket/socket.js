@@ -24,7 +24,7 @@ const userSocketmap={}; //{userId,socketId}
 io.on('connection',(socket)=>{
     const userId = socket.handshake.query.userId;
 
-    if(userId && userId !== "undefine") userSocketmap[userId] = socket.id;
+    if(userId && userId !== "undefine"){ userSocketmap[userId] = socket.id;}
     io.emit("getOnlineUsers",Object.keys(userSocketmap))
 
     socket.on('disconnect',()=>{
@@ -35,4 +35,5 @@ io.on('connection',(socket)=>{
 
 
 module.exports= {app , io , server,getReciverSocketId}
+
 
