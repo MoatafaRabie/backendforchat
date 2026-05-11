@@ -31,7 +31,7 @@ const getcurrentchatters = require("./controles/controlgetcurrentchatter");
 dotenv.config();
 
 app.use(cors({
-    origin: "http://localhost:3000",
+    origin: "https://frontendchat1.vercel.app",
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"]
