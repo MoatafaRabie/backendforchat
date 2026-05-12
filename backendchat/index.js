@@ -99,8 +99,8 @@ app.get("/api/user/currentchatters", isLogin, getcurrentchatters);
 const startServer = async () => {
     try {
         await connectoDP();
-        server.listen(3001, () => {
-            console.log("Server is running on port 3001 and Socket.io is ready!");
+        server.listen(8000, () => {
+            console.log("Server is running on port 8000 and Socket.io is ready!");
         });
     } catch (error) { 
         console.log("Database connection failed", error);
