@@ -8,6 +8,10 @@ const controlmessage = async (req, res) => {
         const { id: receverId } = req.params;
         const senderId = req.user._id;
 
+        if (!messages && !req.file) {
+            return res.status(400).json({ message: "Please send a text message or video file." });
+        }
+
         let chats = await moduleconv.findOne({
             participants: { $all: [senderId, receverId] }
         });
@@ -21,9 +25,14 @@ const controlmessage = async (req, res) => {
         const newmessages = new moduleconvtwo({
             senderId,
             receverId,
-            messages: messages,
+            messages: messages || undefined,
             conversationId: chats._id,
-            
+            video: req.file ? {
+                data: req.file.buffer,
+                contentType: req.file.mimetype,
+                filename: req.file.originalname,
+                size: req.file.size
+            } : undefined
         });
 
         if (newmessages) {
@@ -33,21 +42,38 @@ const controlmessage = async (req, res) => {
         // الحفظ في الداتابيز
         await Promise.all([chats.save(), newmessages.save()]);
 
-        // --- تعديل منطقة الخطر (Socket.io) ---
+        // Emit message to the conversation room so all participants get it in real-time
         try {
-            if (typeof getReciverSocketId === "function") {
-                const reciverSocketId = getReciverSocketId(receverId);
+            if (io && chats && chats._id) {
+                io.to(String(chats._id)).emit("newmessages", newmessages);
+                // also try SSE notify receiver directly (fallback when socket not connected)
+                try {
+                    const { sendSSE } = require('../Socket/sseHelper');
+                    sendSSE(String(receverId), 'newmessages', newmessages);
+                } catch (e) {}
+            } else {
+                // fallback: try per-user socket id
+                const reciverSocketId = typeof getReciverSocketId === "function" ? getReciverSocketId(receverId) : null;
                 if (reciverSocketId && io) {
                     io.to(reciverSocketId).emit("newmessages", newmessages);
                 }
             }
         } catch (socketErr) {
             console.error("Socket.io Error (Ignored):", socketErr.message);
-            // بنعمل catch للسوكيت لوحده عشان الـ Response يرجع حتى لو السوكيت فيه مشكلة
         }
 
-        // الرد لازم يرجع JSON سليم
-        return res.status(201).json(newmessages);
+        // نهيئ نسخة من المستند للرد بدون بافر الفيديو الثقيل
+        const responseObj = newmessages.toObject ? newmessages.toObject() : JSON.parse(JSON.stringify(newmessages));
+        if (responseObj.video) {
+            responseObj.video = {
+                filename: responseObj.video.filename,
+                contentType: responseObj.video.contentType,
+                size: responseObj.video.size,
+                url: `/api/message/video/${newmessages._id}`
+            };
+        }
+
+        return res.status(201).json(responseObj);
 
     } catch (error) {
         console.error("🔥 Final Backend Error:", error);
