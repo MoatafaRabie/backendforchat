@@ -8,11 +8,24 @@ const controlgetmessages = async(req, res) => {
 
         const chats = await moduleconv.findOne({
             participants: { $all: [senderId, receverId] }
-        }).populate("messages"); // سيعمل الآن بعد تصحيح الـ ref
+        }).populate("messages"); 
 
         if (!chats) return res.status(200).json([]);
 
-        res.status(200).json(chats.messages);
+        const mapped = chats.messages.map(msg => {
+            const m = msg.toObject ? msg.toObject() : JSON.parse(JSON.stringify(msg));
+            if (m.video && m.video.filename) {
+                m.video = {
+                    filename: m.video.filename,
+                    contentType: m.video.contentType,
+                    size: m.video.size,
+                    url: `/api/message/video/${m._id}`
+                };
+            }
+            return m;
+        });
+
+        res.status(200).json(mapped);
     } catch (error) {
         console.error("🔥 Error in getMessages Controller:", error.message);
         return res.status(500).json({ message: "Internal Server Error" });
