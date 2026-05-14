@@ -9,7 +9,7 @@ const io = new Server(server, {
   cors: {
     origin: ["https://frontendchat1.vercel.app"],
     methods: ["GET", "POST"],
-    credentials: true,
+    credentials: false,
     allowedHeaders: ["Content-Type", "Authorization"]
   },
   transports: ["polling", "websocket"],
