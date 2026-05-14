@@ -15,7 +15,7 @@ const io = new Server(server, {
   transports: ["polling", "websocket"],
   allowEIO3: true
 });
-
+  
 const userSocketmap = {};
 
 const getReciverSocketId = (receverId) => {
@@ -128,4 +128,3 @@ io.on("connection", (socket) => {
 });
 
 module.exports = { app, io, server, getReciverSocketId };
-
