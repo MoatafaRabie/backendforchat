@@ -100,7 +100,7 @@ const startServer = async () => {
     try {
         await connectoDP();
         server.listen(8000, () => {
-            console.log("Server is running on port 8000 and Socket.io is ready!");
+            console.log("Server is running on port 3001 and Socket.io is ready!");
         });
     } catch (error) { 
         console.log("Database connection failed", error);
@@ -108,4 +108,3 @@ const startServer = async () => {
 }
 
 startServer();
-
