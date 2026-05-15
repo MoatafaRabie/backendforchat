@@ -105,14 +105,74 @@ const AccessToken = twilio.jwt.AccessToken;
 const VideoGrant = AccessToken.VideoGrant;
 
 app.post('/api/twilio/token', (req, res) => {
+
+    console.log("BODY:", req.body);
+
     const { identity, room } = req.body || {};
-    if (!identity) return res.status(400).json({ error: 'missing identity' });
+
+    console.log("IDENTITY:", identity);
+    console.log("ROOM:", room);
+
     const accountSid = process.env.TWILIO_ACCOUNT_SID;
     const apiKeySid = process.env.TWILIO_API_KEY_SID;
     const apiKeySecret = process.env.TWILIO_API_KEY_SECRET;
-    if (!accountSid || !apiKeySid || !apiKeySecret) {
-        return res.status(500).json({ error: 'Twilio credentials not configured on server' });
+
+    console.log("ACCOUNT SID:", accountSid);
+    console.log("API KEY SID:", apiKeySid);
+    console.log("API SECRET:", apiKeySecret ? "EXISTS" : "MISSING");
+
+    try {
+
+        const twilio = require("twilio");
+
+        console.log("TWILIO LOADED");
+
+        const AccessToken = twilio.jwt.AccessToken;
+
+        console.log("ACCESS TOKEN:", AccessToken ? "OK" : "FAILED");
+
+        const VideoGrant = AccessToken.VideoGrant;
+
+        console.log("VIDEO GRANT:", VideoGrant ? "OK" : "FAILED");
+
+        const token = new AccessToken(
+            accountSid,
+            apiKeySid,
+            apiKeySecret,
+            {
+                identity: identity || "guest",
+                ttl: 3600
+            }
+        );
+
+        console.log("TOKEN CREATED");
+
+        const videoGrant = new VideoGrant({
+            room: room || "default-room"
+        });
+
+        token.addGrant(videoGrant);
+
+        console.log("GRANT ADDED");
+
+        const jwt = token.toJwt();
+
+        console.log("JWT:", jwt ? "GENERATED" : "FAILED");
+
+        return res.json({
+            token: jwt
+        });
+
+    } catch (err) {
+
+        console.error("TWILIO TOKEN ERROR:");
+        console.error(err);
+
+        return res.status(500).json({
+            error: err.message
+        });
     }
+});
     if (!AccessToken || !VideoGrant) return res.status(500).json({ error: 'twilio library not available on server' });
 
     try {
