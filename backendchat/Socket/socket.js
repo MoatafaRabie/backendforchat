@@ -3,11 +3,20 @@ const http = require("http");
 const { Server } = require("socket.io");
 
 const app = express();
+const dotenv = require('dotenv');
+dotenv.config();
 
 const server = http.createServer(app);
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'https://frontendchat1.vercel.app';
+const allowedOrigins = FRONTEND_ORIGIN.split(',').map(s => s.trim());
+
 const io = new Server(server, {
   cors: {
-    origin: ["https://frontendchat1.vercel.app"],
+    origin: function(origin, callback) {
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.indexOf(origin) !== -1) return callback(null, true);
+      return callback(new Error('CORS policy: origin not allowed'), false);
+    },
     methods: ["GET", "POST"],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"]
