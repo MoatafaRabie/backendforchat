@@ -30,8 +30,18 @@ const getcurrentchatters = require("./controles/controlgetcurrentchatter");
 
 dotenv.config();
 
+// Allow configuring allowed frontend origin(s) via env var FRONTEND_ORIGIN.
+// Accept a single origin or a comma-separated list.
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN || 'https://frontendchat1.vercel.app';
+const allowedOrigins = FRONTEND_ORIGIN.split(',').map(s => s.trim());
+
 app.use(cors({
-    origin: "https://frontendchat1.vercel.app",
+    origin: function(origin, callback) {
+        // allow requests with no origin (like mobile apps or curl)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) !== -1) return callback(null, true);
+        return callback(new Error('CORS policy: origin not allowed'), false);
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"]
@@ -85,6 +95,35 @@ app.post('/api/signal/end', (req, res) => {
     return res.json({ ok });
 });
 
+// --- Twilio: generate Access Token for Programmable Video ------------------
+// Requires these env vars to be set on the server (do NOT commit secrets):
+// TWILIO_ACCOUNT_SID, TWILIO_API_KEY_SID, TWILIO_API_KEY_SECRET
+const { AccessToken } = require('twilio').jwt || {};
+const VideoGrant = AccessToken && AccessToken.VideoGrant;
+
+app.post('/api/twilio/token', (req, res) => {
+    const { identity, room } = req.body || {};
+    if (!identity) return res.status(400).json({ error: 'missing identity' });
+    const accountSid = process.env.TWILIO_ACCOUNT_SID;
+    const apiKeySid = process.env.TWILIO_API_KEY_SID;
+    const apiKeySecret = process.env.TWILIO_API_KEY_SECRET;
+    if (!accountSid || !apiKeySid || !apiKeySecret) {
+        return res.status(500).json({ error: 'Twilio credentials not configured on server' });
+    }
+    if (!AccessToken || !VideoGrant) return res.status(500).json({ error: 'twilio library not available on server' });
+
+    try {
+        const token = new AccessToken(accountSid, apiKeySid, apiKeySecret, { ttl: 3600 });
+        token.identity = identity;
+        const grant = new VideoGrant({ room });
+        token.addGrant(grant);
+        res.json({ token: token.toJwt() });
+    } catch (err) {
+        console.error('Failed to create Twilio token', err);
+        res.status(500).json({ error: 'failed to create token' });
+    }
+});
+
 app.post("/api/signup", sigin);
 app.post("/api/login", controllogin);
 app.post("/api/logout", controllogout);
@@ -99,8 +138,9 @@ app.get("/api/user/currentchatters", isLogin, getcurrentchatters);
 const startServer = async () => {
     try {
         await connectoDP();
-        server.listen(8000, () => {
-            console.log("Server is running on port 8000 and Socket.io is ready!");
+        const PORT = process.env.PORT || 8000;
+        server.listen(3001, () => {
+            console.log(`Server is running on port ${PORT} and Socket.io is ready!`);
         });
     } catch (error) { 
         console.log("Database connection failed", error);
