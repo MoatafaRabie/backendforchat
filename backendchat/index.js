@@ -40,6 +40,7 @@ app.use(cors({
         // allow requests with no origin (like mobile apps or curl)
         if (!origin) return callback(null, true);
         if (allowedOrigins.indexOf(origin) !== -1) return callback(null, true);
+        console.warn(`CORS blocked origin ${origin}. Allowed: ${allowedOrigins.join(',')}`);
         return callback(new Error('CORS policy: origin not allowed'), false);
     },
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
@@ -113,14 +114,13 @@ app.post('/api/twilio/token', (req, res) => {
     if (!AccessToken || !VideoGrant) return res.status(500).json({ error: 'twilio library not available on server' });
 
     try {
-        const token = new AccessToken(accountSid, apiKeySid, apiKeySecret, { ttl: 3600 });
-        token.identity = identity;
+        const token = new AccessToken(accountSid, apiKeySid, apiKeySecret, { ttl: 3600, identity });
         const grant = new VideoGrant({ room });
         token.addGrant(grant);
         res.json({ token: token.toJwt() });
     } catch (err) {
         console.error('Failed to create Twilio token', err);
-        res.status(500).json({ error: 'failed to create token' });
+        res.status(500).json({ error: err && err.message ? `failed to create token: ${err.message}` : 'failed to create token' });
     }
 });
 
