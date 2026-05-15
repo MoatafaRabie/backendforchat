@@ -139,7 +139,7 @@ const startServer = async () => {
     try {
         await connectoDP();
         const PORT = process.env.PORT || 8000;
-        server.listen(3001, () => {
+        server.listen(PORT, () => {
             console.log(`Server is running on port ${PORT} and Socket.io is ready!`);
         });
     } catch (error) { 
