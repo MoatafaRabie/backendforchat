@@ -4,6 +4,7 @@ const connectoDP = require("./ConnectDP/ConnecttoDP");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const dotenv = require('dotenv');
+const twilio = require("twilio");
 
 const { app, server } = require("./Socket/socket"); 
 
@@ -99,8 +100,9 @@ app.post('/api/signal/end', (req, res) => {
 // --- Twilio: generate Access Token for Programmable Video ------------------
 // Requires these env vars to be set on the server (do NOT commit secrets):
 // TWILIO_ACCOUNT_SID, TWILIO_API_KEY_SID, TWILIO_API_KEY_SECRET
-const { AccessToken } = require('twilio').jwt || {};
-const VideoGrant = AccessToken && AccessToken.VideoGrant;
+
+const AccessToken = twilio.jwt.AccessToken;
+const VideoGrant = AccessToken.VideoGrant;
 
 app.post('/api/twilio/token', (req, res) => {
     const { identity, room } = req.body || {};
